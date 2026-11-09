@@ -32,6 +32,9 @@ mkdir -p "$DATA/usr/bin" "$DATA/etc/init.d" "$DATA/etc/config" "$DATA/lib/upgrad
 install -m 0755 "$BIN"                              "$DATA/usr/bin/$PKG"
 install -m 0755 "$SRC/files/etc/init.d/$PKG"        "$DATA/etc/init.d/$PKG"
 install -m 0644 "$SRC/files/etc/config/$PKG"        "$DATA/etc/config/$PKG"
+# Windows checkouts can turn Linux shell/config files into CRLF. OpenWrt's ash reads
+# those carriage returns as part of command names, so normalize the staged copies.
+sed -i 's/\r$//' "$DATA/etc/init.d/$PKG" "$DATA/etc/config/$PKG"
 install -m 0644 "$SRC/files/lib/upgrade/keep.d/$PKG" "$DATA/lib/upgrade/keep.d/$PKG"
 
 # GL.iNet web UI integration. Harmless on stock OpenWrt: without oui-httpd this is an inert
@@ -98,8 +101,13 @@ MTIME=${SOURCE_DATE_EPOCH:-0}
 TAR="tar --numeric-owner --owner=0 --group=0 --sort=name --mtime=@$MTIME --format=gnu"
 # shellcheck disable=SC2086
 (cd "$CTRL" && $TAR -czf "$BUILD/control.tar.gz" ./*)
+# Windows filesystems do not retain Unix execute bits on generated binaries. Archive the
+# binary separately with an explicit mode so the package stays runnable when built there.
 # shellcheck disable=SC2086
-(cd "$DATA" && $TAR -czf "$BUILD/data.tar.gz" ./*)
+(cd "$DATA" && $TAR --exclude='./usr/bin/openwrt-mcp' -cf "$BUILD/data.tar" ./*)
+# shellcheck disable=SC2086
+(cd "$DATA" && $TAR --mode=0755 -rf "$BUILD/data.tar" ./usr/bin/openwrt-mcp)
+gzip -9 -c "$BUILD/data.tar" > "$BUILD/data.tar.gz"
 echo "2.0" > "$BUILD/debian-binary"
 
 # The outer container is a gzipped tar, NOT an ar archive.

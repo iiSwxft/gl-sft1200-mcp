@@ -168,9 +168,9 @@ make opal-ipk GO=/path/to/go
 ```
 
 This builds a Linux `mipsle` binary with `GOMIPS=softfloat` and packages it as
-`mips_siflower`. The binary and daemon health endpoint were smoke-tested on a GL-SFT1200
-running firmware 4.8.3 / OpenWrt 18.06. Installing the package and exercising MCP tools
-against the router still need validation.
+`mips_siflower`. Package installation and the daemon health endpoint were verified on a
+GL-SFT1200 running firmware 4.8.3 / OpenWrt 18.06. Exercising the MCP tools against the
+router still needs validation.
 
 ### 3. Pair a client and grant it something
 

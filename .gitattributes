@@ -1,0 +1,4 @@
+/.gitattributes text eol=lf
+*.sh text eol=lf
+files/etc/config/* text eol=lf
+files/etc/init.d/* text eol=lf

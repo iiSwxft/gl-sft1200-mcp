@@ -5,6 +5,14 @@
 **Issue a WireGuard client and show a QR to scan it**, plus `uci_get` to read configuration
 without a root shell.
 
+### Platform support
+
+- Added an experimental `opal-ipk` target for the GL-SFT1200 Opal's Siflower MIPS32
+  little-endian soft-float CPU (`mips_siflower`). The package was installed and its health
+  endpoint and a read-only MCP call were verified on firmware 4.8.3 / OpenWrt 18.06.
+- Made package creation preserve Linux executable permissions and normalize init/config
+  file line endings when built from Windows checkouts.
+
 ### Added
 
 - `wg_new_client` -- issues a WireGuard client for the router's VPN server: generates a

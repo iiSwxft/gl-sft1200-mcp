@@ -8,11 +8,10 @@ An MCP server that runs **on** an OpenWrt router, so Claude Code (or any MCP cli
 inspect and change it over an SSH tunnel.
 
 Developed against **GL.iNet** routers — verified on a Flint 2, a Flint 4 (GL-BE14000,
-firmware 4.9.0, router mode) and a Slate 7 Pro (GL-BE10000, firmware 4.8.4, AP mode).
-The tested GL.iNet 4.x devices run OpenWrt 21.02 with `opkg`, which is what the `.ipk`
-targets. It should suit any `opkg`-based OpenWrt; stock OpenWrt 24.10+ moved to `apk` and
-is **untested**. The Opal is a separate firmware target; its 4.8.3 firmware reports
-OpenWrt 18.06.
+firmware 4.9.0, router mode), a Slate 7 Pro (GL-BE10000, firmware 4.8.4, AP mode), and,
+experimentally, the GL-SFT1200 Opal (firmware 4.8.3 / OpenWrt 18.06). The Flint and Slate
+targets use the `aarch64_cortex-a53` package; the Opal requires its own `mips_siflower`
+package. Stock OpenWrt 24.10+ moved to `apk` and is **untested**.
 
 The other OpenWrt MCP servers I could find run *off*-router — they SSH in from your
 workstation on every call. This one is resident: a single static Go binary under procd,
@@ -168,9 +167,13 @@ make opal-ipk GO=/path/to/go
 ```
 
 This builds a Linux `mipsle` binary with `GOMIPS=softfloat` and packages it as
-`mips_siflower`. Package installation and the daemon health endpoint were verified on a
-GL-SFT1200 running firmware 4.8.3 / OpenWrt 18.06. Exercising the MCP tools against the
-router still needs validation.
+`mips_siflower`. The package was installed on a GL-SFT1200 running firmware 4.8.3 / OpenWrt
+18.06; the service starts at boot and its health endpoint responds on `127.0.0.1:8730`.
+The MCP handshake, tool listing, `ubus_list`, and a read-only `system.board` call were also
+verified through an SSH tunnel. The package does not change Wi-Fi or network settings.
+Other tools and workflows have not yet been validated on the Opal. Keep the service on its
+loopback listener and reach it with an SSH tunnel; pair a client and grant only the tools and
+scopes it needs.
 
 ### 3. Pair a client and grant it something
 

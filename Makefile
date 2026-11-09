@@ -5,6 +5,7 @@ ROUTER ?= root@192.168.8.1
 #   make build GO=/usr/local/go/bin/go
 GO     ?= go
 ARCH   ?= arm64
+GOMIPS ?=
 
 # OpenWrt's dropbear has no sftp-server, so modern scp (which defaults to SFTP)
 # fails with "Connection closed". Pipe over ssh instead.
@@ -19,7 +20,7 @@ test:
 	$(GO) vet ./... && $(GO) test ./...
 
 build: test
-	CGO_ENABLED=0 GOOS=linux GOARCH=$(ARCH) $(GO) build -ldflags="-s -w" -o openwrt-mcp.$(ARCH) .
+	CGO_ENABLED=0 GOOS=linux GOARCH=$(ARCH) GOMIPS=$(GOMIPS) $(GO) build -ldflags="-s -w" -o openwrt-mcp.$(ARCH) .
 
 install: build
 	$(call DEPLOY,/usr/bin/openwrt-mcp) < openwrt-mcp.$(ARCH)
@@ -37,6 +38,10 @@ VERSION = $(shell sed -n 's/^var version = "\(.*\)"/\1/p' main.go)
 ipk: build
 	./mkipk.sh openwrt-mcp.$(ARCH) $(VERSION) $(IPK_ARCH)
 
+# GL-SFT1200 Opal: Siflower MIPS32 little-endian, soft-float, opkg arch mips_siflower.
+opal-ipk:
+	$(MAKE) ipk ARCH=mipsle GOMIPS=softfloat IPK_ARCH=mips_siflower
+
 # Unlike `install`, this survives a firmware upgrade: the package ships a
 # /lib/upgrade/keep.d entry, and opkg treats /etc/config as a conffile.
 install-ipk: ipk
@@ -46,4 +51,4 @@ install-ipk: ipk
 clean:
 	rm -f openwrt-mcp openwrt-mcp.* *.ipk
 
-.PHONY: test build install stage ipk install-ipk clean
+.PHONY: test build install stage ipk install-ipk opal-ipk clean

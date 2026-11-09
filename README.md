@@ -9,8 +9,10 @@ inspect and change it over an SSH tunnel.
 
 Developed against **GL.iNet** routers — verified on a Flint 2, a Flint 4 (GL-BE14000,
 firmware 4.9.0, router mode) and a Slate 7 Pro (GL-BE10000, firmware 4.8.4, AP mode).
-GL.iNet firmware 4.x is OpenWrt 21.02 with `opkg`, which is what the `.ipk` targets. It
-should suit any `opkg`-based OpenWrt; stock OpenWrt 24.10+ moved to `apk` and is **untested**.
+The tested GL.iNet 4.x devices run OpenWrt 21.02 with `opkg`, which is what the `.ipk`
+targets. It should suit any `opkg`-based OpenWrt; stock OpenWrt 24.10+ moved to `apk` and
+is **untested**. The Opal is a separate firmware target; its 4.8.3 firmware reports
+OpenWrt 18.06.
 
 The other OpenWrt MCP servers I could find run *off*-router — they SSH in from your
 workstation on every call. This one is resident: a single static Go binary under procd,
@@ -154,6 +156,21 @@ make install     ROUTER=root@192.168.8.1   # straight onto the filesystem, no pa
 The router needs no Go, no compiler and no OpenWrt SDK: the binary is statically linked and
 cross-compiled on your machine. `make` uses whatever `go` is on your PATH; override with
 `make install-ipk GO=/usr/local/go/bin/go` if you keep it somewhere unusual.
+
+#### GL-SFT1200 Opal (experimental)
+
+The Opal uses the Siflower SF19A28 MIPS32 little-endian soft-float target. Its GL.iNet
+firmware reports the package architecture as `mips_siflower`; the default ARM64 release
+package will not run on it. Build an Opal package from this checkout with:
+
+```sh
+make opal-ipk GO=/path/to/go
+```
+
+This builds a Linux `mipsle` binary with `GOMIPS=softfloat` and packages it as
+`mips_siflower`. The binary and daemon health endpoint were smoke-tested on a GL-SFT1200
+running firmware 4.8.3 / OpenWrt 18.06. Installing the package and exercising MCP tools
+against the router still need validation.
 
 ### 3. Pair a client and grant it something
 

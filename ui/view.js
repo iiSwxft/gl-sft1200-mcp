@@ -14,20 +14,41 @@
 // Read-only. Pairing and granting stay CLI-only so that nothing reachable over the network
 // can widen a grant.
 (function () {
-  // Element UI's palette, which the surrounding shell already uses. Matched by hand rather
-  // than by using el-* components: whether Element is globally registered for an eval'd view
-  // is unverified, and an unregistered component renders nothing at all.
-  var C = {
-    primary: '#409eff',
-    ok: '#67c23a',
-    danger: '#f56c6c',
-    warn: '#e6a23c',
-    text: '#303133',
-    muted: '#909399',
-    border: '#dcdfe6',
-    panel: '#ffffff',
-    bg: '#f5f7fa'
-  };
+  // Element UI palette, selected from the active admin-panel content surface so this view
+  // follows GL.iNet's own theme switch instead of always forcing a light page. Avoid relying
+  // on a particular GL theme class: firmware themes have changed their markup between builds.
+  function palette() {
+    var surfaces = [document.body, document.documentElement];
+    var selectors = ['#app', '.el-main', 'main', '.main-container', '.app-main', '.content-wrapper'];
+    selectors.forEach(function (selector) {
+      var el = document.querySelector(selector);
+      if (el) surfaces.unshift(el);
+    });
+
+    var dark = false;
+    for (var i = 0; i < surfaces.length; i++) {
+      var bg = window.getComputedStyle(surfaces[i]).backgroundColor;
+      var rgb = bg.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+      if (rgb && bg.indexOf('rgba') !== 0 || (rgb && bg.match(/,\s*1\s*\)$/))) {
+        var brightness = (Number(rgb[1]) * 299 + Number(rgb[2]) * 587 + Number(rgb[3]) * 114) / 1000;
+        dark = brightness < 145;
+        break;
+      }
+    }
+
+    return {
+      primary: '#409eff',
+      ok: '#67c23a',
+      danger: '#f56c6c',
+      warn: '#e6a23c',
+      text: dark ? '#e5eaf3' : '#303133',
+      muted: dark ? '#a3a6ad' : '#909399',
+      border: dark ? '#414243' : '#dcdfe6',
+      panel: dark ? '#25262b' : '#ffffff',
+      bg: dark ? '#18191d' : '#f5f7fa',
+      input: dark ? '#2b2d33' : '#ffffff'
+    };
+  }
 
   function sessionId() {
     var m = document.cookie.match(/(?:^|;\s*)Admin-Token=([^;]*)/);
@@ -85,6 +106,7 @@
 
     render: function (h) {
       var self = this;
+      var C = palette();
 
       function panel(title, children, extra) {
         return h('div', {
@@ -194,7 +216,7 @@
             on: { click: self.load },
             style: {
               padding: '7px 16px', cursor: 'pointer', border: '1px solid ' + C.border,
-              background: '#fff', color: C.text, borderRadius: '4px', fontSize: '13px'
+              background: C.input, color: C.text, borderRadius: '4px', fontSize: '13px'
             }
           }, self.loading ? 'Refreshing…' : 'Refresh')
         ]),
